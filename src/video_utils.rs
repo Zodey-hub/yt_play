@@ -1,8 +1,5 @@
 use crate::string_utils;
-use http_req::{
-    request::{self, Method, Request},
-    uri::Uri,
-};
+use http_req::request;
 use tabled::Tabled;
 
 #[derive(Tabled, Clone)]
@@ -82,32 +79,17 @@ pub fn get_videos(mut webpage_source: &str) -> [Video; 5] {
     videos
 }
 
-pub fn download_video(id: &str) {
+pub fn get_video_direct_link(id: &str) -> String {
     let mut api_response_buffer = Vec::new();
-    let uri = Uri::try_from("https://ytpp3.com/newp").unwrap();
-    let body_string = format!("u=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D{}&c=HU", id);
-    let body = body_string.as_bytes();
-
-    Request::new(&uri)
-        .method(Method::POST)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .header("Content-Length", &body.len())
-        .body(body)
-        .send(&mut api_response_buffer)
-        .unwrap();
-
-    let mut writer = Vec::new();
     request::get(
         format!(
-            "https://ytpp3.com{}",
-            string_utils::give_text_between(
-                &String::from_utf8_lossy(&api_response_buffer),
-                "\"mp3_url\":\"",
-                "\","
-            )
+            "https://youtube-dl-web.vercel.app/api/info?q={}&f=bestaudio",
+            id
         ),
-        &mut writer,
+        &mut api_response_buffer,
     )
     .unwrap();
-    std::fs::write(format!("{}.mp3", id), &writer).unwrap();
+    let parsed = json::parse(&String::from_utf8_lossy(&api_response_buffer))
+        .expect("Failed to parse JSON response!");
+    parsed["url"].as_str().unwrap().to_string()
 }

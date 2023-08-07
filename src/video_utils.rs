@@ -1,5 +1,5 @@
 use crate::string_utils;
-use http_req::request;
+use std::process::Command;
 use tabled::Tabled;
 
 #[derive(Tabled, Clone)]
@@ -46,12 +46,11 @@ pub fn get_videos(mut webpage_source: &str) -> [Video; 5] {
     for i in 0..5 {
         start = webpage_source.find(BEFORE).unwrap();
         start += BEFORE.len();
-        end = webpage_source[start..].find(AFTER).unwrap();
+        end = webpage_source[start..].find(AFTER).unwrap() + 1;
         all_video_data = webpage_source[start..start + end].to_string();
 
         videos[i].Index = i;
-        videos[i].Title =
-            string_utils::give_text_between(&all_video_data, "{\"label\":\"", " készítette:");
+        videos[i].Title = string_utils::give_text_between(&all_video_data, "{\"label\":\"", " by");
         videos[i].Uploader =
             string_utils::give_text_between(&all_video_data, "{\"runs\":[{\"text\":\"", "\"");
         videos[i].Length =
@@ -61,6 +60,7 @@ pub fn get_videos(mut webpage_source: &str) -> [Video; 5] {
             "viewCountText\":{\"simpleText\":\"",
             " ",
         );
+
         if all_video_data.contains("\"publishedTimeText\":{\"simpleText\":\"") {
             // if the video is uploaded by yt, it doesn't have date
             videos[i].Uploaded = string_utils::give_text_between(
@@ -69,27 +69,36 @@ pub fn get_videos(mut webpage_source: &str) -> [Video; 5] {
                 "\"",
             );
         } else {
-            videos[i].Uploaded = "Unknown!".to_string();
+            videos[i].Uploaded = "YouTube".to_string();
         }
-        videos[i].VideoID =
-            string_utils::give_text_between(&all_video_data, ":{\"url\":\"/watch?v=", "\"");
-
+        videos[i].VideoID = string_utils::give_text_between(&all_video_data, "videoId\":\"", "\"");
         webpage_source = &webpage_source[start + end..];
     }
     videos
 }
 
-pub fn get_video_direct_link(id: &str) -> String {
+/*pub fn get_video_direct_link(id: &str) -> String {
     let mut api_response_buffer = Vec::new();
     request::get(
         format!(
             "https://youtube-dl-web.vercel.app/api/info?q={}&f=bestaudio",
-            id
+            //id
         ),
         &mut api_response_buffer,
     )
     .unwrap();
     let parsed = json::parse(&String::from_utf8_lossy(&api_response_buffer))
         .expect("Failed to parse JSON response!");
-    parsed["url"].as_str().unwrap().to_string()
+    parsed["url"].as_str().unwrap().trim().to_string()
+}*/
+
+pub fn get_video_direct_link(id: &str) -> String {
+    let output = Command::new("yt-dlp")
+        .arg(format!("https://youtu.be/{}", id))
+        .arg("-f")
+        .arg("bestaudio")
+        .arg("-g")
+        .output()
+        .expect("Failed to start yt-dlp! Maybe it's not in the path...");
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
 }

@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 http_req = "*"
 tabled = "*"
-json = "*"
 
 [profile.release]
 strip = true

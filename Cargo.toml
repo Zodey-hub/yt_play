@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-http_req = "*"
-tabled = "*"
+fltk = "1.4.16"
+fltk-theme = "0.7.2"
+http_req = "0.10.1"
+regex = "1.10.2"
 
 [profile.release]
 strip = true

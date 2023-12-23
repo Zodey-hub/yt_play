@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-http_req = "*"
-tabled = "*"
+http_req = "0.10.2"
+tabled = "0.15.0"
 
 [profile.release]
 strip = true
 opt-level = 3
-lto = true
+lto = "fat"
 codegen-units = 1
 panic = "abort"
 

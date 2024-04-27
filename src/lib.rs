@@ -1,3 +1,4 @@
+use std::env;
 use std::{error::Error, process::Command};
 
 use tabled::Tabled;
@@ -38,7 +39,9 @@ impl Video {
     }
 
     pub fn play_best_audio(&self) -> Result<(), Box<dyn Error>> {
-        Command::new("mpv")
+        let player = env::var("yt_play_player")?;
+
+        Command::new(&player)
             .arg(self.bestaudio_direct_link()?)
             .output()?;
         Ok(())
